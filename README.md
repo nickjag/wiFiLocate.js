@@ -10,10 +10,12 @@ The applicable signals devices must be stored beforehand and are typically ident
 
 ### Install the wiFiLocate.js script
 
-```<script type="text/javascript" src="wiFiLocate.js"></script>```
+```
+<script type="text/javascript" src="wiFiLocate.js"></script>
+```
 
 ### Add Your Signals Map Coordinates
-Add the permanent x and y coordinates (in pixels) of the wiFi access points (or other signals devices) as they would appear on your map graphic. "mac" stands for MAC address.
+Add the x and y coordinates (in pixels) of all the wiFi access points (or other signals devices) as they would appear on your map graphic. They are typically identified by their MAC address, which can be used as the property name. Ideally, you would want to have as many as possible, and with signal overlap.
 
 ```
 var settings = {
@@ -28,7 +30,7 @@ wiFiLocate.init(settings);
 ```
 
 ### Send RSSI Values, Get Position Back
-Send the 3 most adjacent (highest RSSI value) signals devices (identified by MAC address usually) with their corresponding RSSI value.
+Send the 3 most adjacent (highest RSSI value) signals devices (identified by MAC address usually) with their corresponding RSSI value. The returned JSON object will contain the position x and y coordinates, and radius (in pixels).
 
 ```
 var environment = {
@@ -40,7 +42,6 @@ var environment = {
 var position = wiFiLocate.getLocation(env);
 
 console.log(position);
-// Outputs JSON object of x, y, and radius in pixels
 // Object {x: 733.9861362306069, y: 389.3438356164384, radius: 41.085}
 
 ```
@@ -50,8 +51,9 @@ console.log(position);
 ```
 feetToPixels : 2.739,
 rssiToFeet : 3,
-defaultRadius : 45,
-maxDistanceForAlternativePoints : 80,
+adjacentRssi : 40,
+defaultRadius : 5, // in RSSI
+maxDistanceForAlternativePoints : 80, // in RSSI
 logging : false
 ```
 
@@ -64,7 +66,7 @@ The multiplier to convert RSSI values to feet. This will typically stay at aroun
 **adjacentRssi**
 This is the RSSI value the script will interpret as being at or very close to the originating signals device. 
 
-This value can be adjusted lower if the signals devices used show consistent, lower adjacent RSSI readings (such as 20). During wiFi testing, inconsistent readings were present (between 40 to 20), resulting in a safer setting of 40.
+This value can be adjusted lower if the signals devices used show consistent, lower adjacent RSSI readings (such as `20`). During wiFi testing, inconsistent readings were present (between `40` to `20`), resulting in a safer setting of `40`.
 
 This value can also drastically change depending on walls and signal-blocking elements. Ideally, in the future, the script would also accept a unique adjacentRssi value along with each "mac" coordinate, allowing for more control. 
 
