@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>WiFiLocate.js Simulator Demo</title>
+	<meta name="viewport" content="width=1200, initial-scale=1.0, user-scalable=yes">
+	<meta name="description" content="wiFiLocate.js Simulator Demo">
+	<meta name="author" content="Nick Jag">
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+	<link type="text/css" rel="stylesheet" href="css/style.css">
+</head>
+<body>
+	
+	<!-- BLUE TRACKING DOT -->
+	
+	<div id="blue-dot" class="active"></div>
+	
+	<!-- CONTROL BAR -->
+	
+	<div id="controls">
+		<div id="control-mode">
+			Mode:
+			<button class="mode-btn live active">Live</button>
+			<button class="mode-btn edit">Edit</button>
+		</div>
+		<div id="control-mac">
+			<button class="mac-btn add">Add</button>
+			<button class="mac-btn remove">Remove</button>
+		</div>
+	</div>
+	
+	<!-- MAP -->
+	
+	<div id="map-main">
+		<div class="mac" data-id="1" style="top:255px;left:-140px;"></div>
+		<div class="mac" data-id="2" style="top:255px;left:220px;"></div>
+		<div class="mac" data-id="3" style="top:255px;left:600px;"></div>
+		<div class="mac" data-id="4" style="top:-110px;left:-140px;"></div>
+		<div class="mac" data-id="5" style="top:-110px;left:220px;"></div>
+		<div class="mac" data-id="6" style="top:-110px;left:600px;"></div>
+		<div class="mac" data-id="7" style="top:75px;left:860px;"></div>
+	</div>
+	
+	<!-- SRC -->
+	
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.10.2.js"></script>
+	<script type="text/javascript" src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+	<script type="text/javascript" src="js/wiFiLocate.js"></script>
+	
+	<!-- SIMULATOR JS -->
+	
+	<script>
+		
+		// Simulator Settings
+		
+		var logging			= false; 	// whether to log calculation flow in wiFiLocate.js to console
+		var updateTime		= 100; 		// time blue dot updates in milliseconds
+		var simulateLimit	= true; 	// simulate limited signal strength (represented by edge of signal circle)
+		var flashMacs 		= true; 	// flash the macs that are being used in the calculations
+		var isometric 		= false; 	// display macs in isometric perspective
+		
+		// Begin Simulator
+		
+		var map 			= $('#map-main');
+		var macControls 	= $('#control-mac');
+		var macRemove 		= macControls.find('.remove');
+		var macAdd 			= macControls.find('.add');
+		var modeEdit 		= $('.mode-btn.edit');
+		var modeLive 		= $('.mode-btn.live');
+		var blueDot			= $('#blue-dot');
+		var cursorX;
+		var cursorY;
+		var allowChange 	= false;
+		
+		if (isometric) {
+			
+			$('.mac').addClass('isometric');
+			blueDot.addClass('isometric');
+		}
+		
+		// Get mouse position and unlock position change
+		
+		document.onmousemove = function(e){
+			
+			cursorX = e.pageX;
+			cursorY = e.pageY;
+			allowChange = true;
+		}
+		
+		// Lock position change every second to stop tracking when mouse stops
+		
+		diallowChange = setInterval("disallowChange()", 1000);
+		
+		function disallowChange() {
+			allowChange = false;
+		}
+		
+		jQuery(document).ready(function($) {
+			
+			jQuery.fn.exists=function(){return this.length>0;}
+			
+			// Change mode to edit
+			
+			modeEdit.on('click', function() {
+				
+				$('.mode-btn').removeClass('active');
+				$(this).addClass('active');
+				macControls.addClass('enabled');
+				map.addClass('editable');
+				refreshDraggable();
+				stopLivePositioning();
+			});
+			
+			// Change mode to live
+			
+			modeLive.on('click', function() {
+				
+				$('.mode-btn').removeClass('active');
+				$(this).addClass('active');
+				macControls.removeClass('enabled');
+				map.removeClass('editable');
+				destroyDraggable();
+				prepareMacs();
+				startLivePositioning();
+			});
+			
+			// Click (to remove) on a mac-addressed access point
+			
+			$('body').delegate('.mac','click', function() {
+				
+				var p = $(this);
+				$('.mac').removeClass('active');
+				p.addClass('active');
+				activateMacControls(p.attr('data-id'));
+			});
+			
+			// Click to add a mac-addressed access point (we're using simple numbers)
+			
+			macAdd.on('click', function() {
+				
+				if ($(this).parent().hasClass('enabled')) {
+					
+					// Get next id number to use
+					
+					var useId = false;
+					var maxIds = 10;
+					
+					for (var i=1;i<=maxIds;i++) {
+						
+						if (!($(".mac[data-id='"+i+"']").exists())) {
+							
+							useId = i;
+							break;
+						}
+					}
+					
+					// Insert the new point
+					
+					if (useId && i<=(maxIds+1)) {
+						
+						var newMac = $('<div class="mac" style="top:300px;left:500px;"></div>');
+						newMac.attr('data-id', useId);
+						
+						if (isometric) {
+							
+							newMac.addClass('isometric');
+						}
+						
+						newMac.appendTo('#map-main');
+					}
+					
+					refreshDraggable();
+				}
+			});
+			
+			// Click to remove an mac-addressed access-point
+			
+			macRemove.on('click', function() {
+				
+				if ($(this).parent().hasClass('enabled') && $(this).hasClass('enabled')) {
+					
+					if ($(".mac[data-id='"+macId+"']").exists()) {
+						
+						$(".mac[data-id='"+macId+"']").remove();
+					}
+					refreshDraggable();
+				}
+			});
+			
+			// Begin draggable jquery ui for edit mode
+			
+			createDraggable();
+			
+			// Prepare simulated environment (with RSSI values)
+			
+			prepareMacs();
+			
+			// Initiate live positioning
+			
+			var settings = {
+				logging : logging
+			}
+			
+			wiFiLocate.init(settings);
+			
+			// Continuously call the locator
+			
+			startLivePositioning();
+			
+			// Refresh the environment if the window is resized
+			
+			$(window).resize(function() {
+				
+				prepareMacs();
+			});
+			
+			
+		});
+		
+		var macId = '1';
+		
+		function activateMacControls(id) {
+			
+			macId = id;
+			macRemove.addClass('enabled');
+		}
+		
+		function deactivateMacControls() {
+			
+			macRemove.removeClass('enabled');
+		}
+		
+		function refreshDraggable() {
+			
+			$('.mac').removeClass('active');
+			deactivateMacControls();
+			
+			createDraggable();
+			destroyDraggable();
+			createDraggable();
+		}
+		
+		function createDraggable() {
+			
+			var __dx;
+			var __dy;
+			var __scale=0.5;
+			var __recoupLeft, __recoupTop;
+			
+			$('#map-main.editable .mac').draggable({
+				
+				// Bug fix for draggable during transform on stack overflow
+				// http://stackoverflow.com/questions/17098464/jquery-ui-draggable-css-transform-causes-jumping
+				
+				drag: function ( event, ui ) {
+					__dx = ui.position.left - ui.originalPosition.left;
+					__dy = ui.position.top - ui.originalPosition.top;
+					ui.position.left = ui.originalPosition.left + ( __dx);
+					ui.position.top = ui.originalPosition.top + ( __dy );
+					ui.position.left += __recoupLeft;
+					ui.position.top += __recoupTop;
+				},
+				start: function ( event, ui ) {
+					$( this ).css( 'cursor', 'pointer' );
+					var left = parseInt( $( this ).css( 'left' ), 10 );
+					left = isNaN( left ) ? 0 : left;
+					var top = parseInt( $( this ).css( 'top' ), 10 );
+					top = isNaN( top ) ? 0 : top;
+					__recoupLeft = left - ui.position.left;
+					__recoupTop = top - ui.position.top;
+				},
+				create: function ( event, ui ) {
+					$( this ).attr( 'oriLeft', $( this ).css( 'left' ) );
+					$( this ).attr( 'oriTop', $( this ).css( 'top' ) );
+				}
+				
+			});
+			
+		}
+		
+		function destroyDraggable() {
+			if ($(".mac").draggable("instance") !== undefined) {
+				$(".mac").draggable("destroy");
+			}
+		}
+		
+		function getCenterCoordinates(ele) {
+			
+			var leftCoor = ele.offset().left;
+			var topCoor = ele.offset().top;
+			
+			if (isometric) {
+				topCoor = topCoor - 88;
+			}
+			
+			var eleWidth = ele.width();
+			var eleHeight = ele.height();
+			
+			var xCoor = leftCoor + (eleWidth / 2);
+			var yCoor = topCoor + (eleHeight / 2);
+			
+			var returnCoors = [xCoor,yCoor];
+			return returnCoors;
+		}
+		
+		function prepareMacs() {
+			
+			var updateCoordinates = {};
+			
+			$('#map-main .mac').each(function() {
+				updateCoordinates['mac' + $(this).attr('data-id')] = getCenterCoordinates($(this));
+			});
+			
+			wiFiLocate.coordinates = updateCoordinates;
+		}
+		
+		function runLivePositioning() {
+			
+			if (allowChange) {
+				var env = getEnvironment();
+				var position = JSON.parse(wiFiLocate.getLocation(env));
+				updateBlueDot(position.x,position.y,position.radius);
+			}
+		}
+		
+		function stopLivePositioning() {
+			
+			clearInterval(livePositioning);
+
+			blueDot.hide();
+		}
+		
+		function startLivePositioning() {
+			
+			livePositioning = setInterval("runLivePositioning()", updateTime);
+			blueDot.show();
+		}
+		
+		function getEnvironment() {
+			
+			// Get distance from cursor to all mac-addressed access points and use the 3 closest ones
+			
+			var cursorDistances = new Array();
+			
+			for (var macName in wiFiLocate.coordinates) {
+				if (wiFiLocate.coordinates.hasOwnProperty(macName)) {
+					
+					var macX = wiFiLocate.coordinates[macName][0];
+					var macY = wiFiLocate.coordinates[macName][1];
+					
+					var macDistance = new wiFiLocate.basicFunctions.getDistance(cursorX, cursorY, macX, macY);
+					distanceKey = Math.round(macDistance.d)
+					cursorDistances[distanceKey] = macName;
+				}
+			}
+			
+			// Reset any flashing/yellow mac-addressed access points
+			
+			if (flashMacs) {
+				$('.mac').removeClass('flash');
+			}
+			
+			// From the distance array, get the closest access points, max 3
+			
+			var environmentMacs = {};
+			
+			var i = 1;
+			
+			for (x in cursorDistances) {
+				var macName = cursorDistances[x];
+				var macDistance = wiFiLocate.basicFunctions.pixelsToRssi(x);
+				
+				// Check if we should prevent unrealistic signal strengths (appx. less than -88)
+				
+				if ( (!simulateLimit) || (macDistance < 88)) {
+					
+					environmentMacs[macName] = macDistance;
+					
+					// Highlight the access points that will be used in calculations
+					
+					if (flashMacs) {
+						flashMac(macName);
+					}
+					
+					if (i == 3) { break; }
+					i++;
+				}
+			}
+			
+			return environmentMacs;
+		}
+		
+		function updateBlueDot(coorX,coorY,radius) {
+			
+			// Update blue dot. Also possible to resize based on returned radius (showing accuracy).
+			
+			blueDot.css({
+				//'width':radius * 2 + 'px',
+				//'height':radius * 2 + 'px',
+				'left':coorX-20,
+				'top':coorY-20
+			});
+			
+			// Change the blue dot color if inaccurate
+			
+			if (radius > 45) {
+				blueDot.addClass('inaccurate');
+			}
+			else {
+				blueDot.removeClass('inaccurate');
+			}
+		}
+		
+		function flashMac(macName) {
+			
+			var macId = parseInt(macName.replace('mac',''));
+			$(".mac[data-id='"+macId+"']").addClass('flash');
+		}
+		
+		
+	</script>
+
+
+
+</body>
+</html>

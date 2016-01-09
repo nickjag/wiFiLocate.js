@@ -14,8 +14,8 @@ The applicable signals devices must be stored beforehand and are typically ident
 <script type="text/javascript" src="wiFiLocate.js"></script>
 ```
 
-### Add Your Signals Map Coordinates
-Add the x and y coordinates (in pixels) of all the wiFi access points (or other signals devices) as they would appear on your map graphic. They are typically identified by their MAC address, which can be used as the property name. Ideally, you would want to have as many as possible, and with signal overlap.
+### Initiate With Your Signals Devices
+Initiate with the x and y coordinates (in pixels) of all the wiFi access points (or other signals devices) as they would appear on your map graphic. They are typically identified by their MAC address, which can be used as the property name. Ideally, you would want to have as many as possible, and with signal overlap.
 
 ```
 var settings = {
@@ -29,7 +29,7 @@ var settings = {
 wiFiLocate.init(settings);
 ```
 
-### Send RSSI Values, Get Position Back
+### Send RSSI Values, Get Position Back. Repeat.
 Send the 3 most adjacent (highest RSSI value) signals devices (identified by MAC address usually) with their corresponding RSSI value. The returned JSON object will contain the position x and y coordinates, and radius (in pixels).
 
 ```

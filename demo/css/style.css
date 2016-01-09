@@ -1,0 +1,210 @@
+
+/*
+ wiFiLocate.js Simulator Style
+ Floorplan Image by Peter Chrismar
+ https://commons.wikimedia.org/wiki/File:Photocopy_of_Floorplan_(drawn_by_Peter_Chismar,_December_13,_1974_and_revised_January_17,_1975)_1ST_FLOOR_-_Crestline_City_Hall,_Bucyrus_and_Thoman_Streets,_Crestline,_Crawford_HABS_OHIO,17-CRES,1-69.tif
+ */
+
+#map-main {
+	background: url(../img/map.png) no-repeat center center;
+	position: relative;
+	width: 1200px;
+	height: 700px;
+	margin: 170px auto 0 auto;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+}
+body {
+	font-family: sans-serif;
+	font-size: 14px;
+	font-weight: normal;
+	line-height: 28px;
+	color: #555;
+	background-color: #fff;
+}
+button,
+select,
+input {
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	border: none;
+	outline: none;
+}
+img {
+	max-width: 100%;
+}
+.isometric {
+	transform: rotateX(45deg);
+	-webkit-transform: rotateX(45deg);
+}
+#blue-dot {
+	position: absolute;
+	z-index: 3;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	top: 0;
+	left: 0;
+	
+	background: #7abcff;
+	background: -moz-linear-gradient(top,  #7abcff 0%, #60abf8 24%, #376ace 100%);
+	background: -webkit-linear-gradient(top,  #7abcff 0%,#60abf8 24%,#376ace 100%);
+	background: linear-gradient(to bottom,  #7abcff 0%,#60abf8 24%,#376ace 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7abcff', endColorstr='#376ace',GradientType=0 );
+	
+	transition: left .3s ease, top .3s ease;
+	-o-transition: left .3s ease, top .3s ease;
+	-ms-transition: left .3s ease, top .3s ease;
+	-moz-transition: left .3s ease, top .3s ease;
+	-webkit-transition: left .3s ease, top .3s ease;
+	
+}
+#blue-dot.inaccurate {
+	background: #ed7173;
+	background: -moz-linear-gradient(top,  #ed7173 0%, #f45f5f 24%, #c63538 100%);
+	background: -webkit-linear-gradient(top,  #ed7173 0%,#f45f5f 24%,#c63538 100%);
+	background: linear-gradient(to bottom,  #ed7173 0%,#f45f5f 24%,#c63538 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ed7173', endColorstr='#c63538',GradientType=0 );
+}
+#controls {
+	position: fixed;
+	z-index: 4;
+	width: 100%;
+	height: 40px;
+	background: #eee;
+	top: 0;
+	left: 0;
+	padding: 10px 0 0 0;
+}
+#control-mode {
+	margin: 0 0 0 20px;
+	float: left;
+	font-weight: bold;
+}
+#control-mac {
+	margin: 0 0 0 20px;
+	float: left;
+}
+#controls .mode-btn {
+	display: inline-block;
+	position: relative;
+	color: #666;
+	padding: 7px 15px;
+	margin: 0 0 0 5px;
+	font-size: 12px;
+	font-weight: bold;
+	cursor: pointer;
+	background: #ddd;
+	border: solid 1px #bbb;
+	
+	transition: color .3s ease, background .3s ease;
+	-o-transition: color .3s ease, background .3s ease;
+	-ms-transition: color .3s ease, background .3s ease;
+	-moz-transition: color .3s ease, background .3s ease;
+	-webkit-transition: color .3s ease, background .3s ease;
+}
+#controls .mode-btn:last-child::after {
+	content: "";
+	display: inline-block;
+	position: absolute;
+	right: -14px;
+	top: 0;
+	bottom: 0;
+	margin: auto;
+	height: 20px;
+	font-size: 20px;
+	width: 1px;
+	background: #aaa;
+	font-weight: normal;
+}
+#controls .mode-btn:hover,
+#controls .mode-btn.active {
+	background: #fff;
+}
+#controls .mode-btn.active {
+	background: #3da144;
+	border: solid 1px #3da144;
+	color: #fff;
+}
+#controls .mac-btn {
+	display: inline-block;
+	color: #bbb;
+	padding: 7px 15px;
+	margin: 0 0 0 5px;
+	font-size: 12px;
+	cursor: not-allowed;
+	background: #ddd;
+	border: solid 1px #bbb;
+	
+	transition: color .3s ease, background .3s ease;
+	-o-transition: color .3s ease, background .3s ease;
+	-ms-transition: color .3s ease, background .3s ease;
+	-moz-transition: color .3s ease, background .3s ease;
+	-webkit-transition: color .3s ease, background .3s ease;
+}
+#controls #control-mac.enabled .mac-btn.add,
+#controls #control-mac.enabled .mac-btn.remove.enabled {
+	color: #222;
+	cursor: pointer;
+}
+#controls #control-mac.enabled .mac-btn.active,
+#controls #control-mac.enabled .mac-btn:hover {
+	background: #fff;
+}
+#controls #control-mac.enabled .mac-btn.active {
+	font-weight: bold;
+}
+#controls #control-mac.enabled .mac-btn.remove.enabled {
+	background: #cb5c5c;
+	border: solid 1px #cb5c5c;
+	color: #fff;
+}
+.mac {
+	position: absolute;
+	width: 600px;
+	height: 600px;
+	background: rgba(0,0,0,.1);
+	border-radius: 50%;
+	z-index: 1;
+	
+	background: -moz-linear-gradient(top,  rgba(30,87,153,.5) 0%, rgba(125,185,232,0) 100%);
+	background: -webkit-linear-gradient(top,  rgba(30,87,153,.5) 0%,rgba(125,185,232,0) 100%);
+	background: linear-gradient(to bottom,  rgba(30,87,153,.5) 0%,rgba(125,185,232,0) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1e5799', endColorstr='#007db9e8',GradientType=0 );
+	
+}
+.mac::before {
+	content: "";
+	display: inline-block;
+	z-index: 1;
+	width: 20px;
+	height: 20px;
+	background: #3da144;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin: auto;
+	border-radius: 50%;
+}
+#map-main.editable .mac {
+	background: rgba(0,0,0,.4);
+	cursor: pointer;
+}
+#map-main.editable .mac:hover {
+	background: rgba(61,161,68,.7);
+	z-index: 2;
+}
+#map-main.editable .mac.active {
+	background: rgba(203,92,92,.8);
+	z-index: 2;
+}
+.mac.flash {
+	background: rgba(255,252,0,0.2);
+	z-index: 2;
+}
