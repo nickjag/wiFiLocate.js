@@ -39,7 +39,7 @@ var environment = {
 	'mac3' : -88
 }
 
-var position = wiFiLocate.getLocation(env);
+var position = wiFiLocate.getLocation(environment);
 
 console.log(position);
 // Object {x: 733.9861362306069, y: 389.3438356164384, radius: 41.085}
