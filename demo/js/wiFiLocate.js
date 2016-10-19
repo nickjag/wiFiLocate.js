@@ -86,7 +86,7 @@ var wiFiLocate = {
 
 			var l = ( r1 * r1 - r2 * r2 + D.d * D.d ) / (D.d * 2);
 
-			var h = Math.sqrt( (r1 * r1 - l * l) );
+			var h = Math.sqrt( Math.abs(r1 * r1 - l * l) );
 
 			this.ix1 = x1 + (l * D.dx - h * D.dy) / D.d;
 			this.iy1 = y1 + (h * D.dx + l * D.dy) / D.d;
